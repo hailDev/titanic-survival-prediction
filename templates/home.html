@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titanic Survival Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMKa45JKUNeIBMBhzOZ9ep60p5EjFQiwv+8K4kM" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Hero Section with Background Overlay */
+        .hero {
+            position: relative;
+            height: 100vh;
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            animation: fadeInDown 2s ease-in-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .hero-navbar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: flex-end;
+            z-index: 10;
+        }
+
+        .hero-navbar ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        .hero-navbar a {
+            text-decoration: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .hero-navbar a:hover {
+            color: #f8d32b;
+        }
+
+        .btn-cta {
+            background-color: #f8d32b;
+            color: #212529;
+            font-weight: bold;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        .btn-cta:hover {
+            background-color: #e8c02b;
+            color: #212529;
+            transform: scale(1.05);
+        }
+
+        #predictionResult {
+            min-height: 100%;
+            border: 2px dashed #007bff;
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .prediction-default {
+            border: 2px dashed #007bff;
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+        }
+
+        .prediction-survived {
+            border: 4px solid #28a745;
+            background: #e6ffe6;
+        }
+
+        .prediction-not-survived {
+            border: 4px solid #dc3545;
+            background: #ffe6e6;
+        }
+
+        footer {
+            background-color: #343a40;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    {% load static %}
+    <section class="hero" style="background-image: url('{% static "rb_1932.png" %}');">
+        <nav class="hero-navbar">
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#predict-section">Predict</a></li>
+            </ul>
+        </nav>
+        <div class="hero-content">
+            <h1>Set Sail on the Titanic</h1>
+            <p>Embark on the greatest voyage and predict your survival on this historic journey.</p>
+            <a href="#predict-section" class="btn btn-cta">Predict My Survival</a>
+        </div>
+    </section>
+
+    <!-- Prediction Section -->
+    <section id="predict-section" class="container my-5">
+        <h2 class="text-center mb-4 fw-bold">Predict Your Survival</h2>
+        <div class="row">
+            <!-- Form Section -->
+            <div class="col-md-6">
+                <form id="predictionForm" class="shadow p-4 rounded bg-light">
+                    {% csrf_token %}
+                    <h4 class="mb-3">Enter Your Details</h4>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" name="name" class="form-control" id="name" placeholder="e.g., John Doe" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="age" class="form-label">Age</label>
+                        <input type="number" name="age" class="form-control" id="age" placeholder="Enter your age" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select class="form-select" name="gender" id="gender" required>
+                            <option value="" selected>Select your gender</option>
+                            <option value="1">Male</option>
+                            <option value="0">Female</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="class" class="form-label">Ticket Class</label>
+                        <select class="form-select" name="class" id="class" required>
+                            <option value="" selected>Choose class</option>
+                            <option value="1">First Class</option>
+                            <option value="2">Second Class</option>
+                            <option value="3">Third Class</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tarif" class="form-label">Fare</label>
+                        <input type="number" name="tarif" class="form-control" id="tarif" placeholder="Enter your fare">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cabin" class="form-label">Cabin</label>
+                        <input type="text" name="cabin" class="form-control" id="cabin" placeholder="Enter your cabin number">
+                    </div>
+                    <div class="mb-3">
+                        <label for="class" class="form-label">Model</label>
+                        <select class="form-select" name="model" id="model" required>
+                            <option value="" selected>Choose model</option>
+                            <option value="1">KNN (Recommend)</option>
+                            <option value="2">Logistic Regression</option>
+                            <option value="3">Naive Bayes</option>
+                            <option value="4">svm</option>
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" id="predictButton" class="btn btn-primary btn-lg w-100">
+                            <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <span id="predictText">Predict Now</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Prediction Result Section -->
+            <div class="col-md-6">
+                <div id="predictionResult" class="shadow p-4 rounded h-100 d-flex flex-column align-items-center justify-content-center border prediction-default">
+                    <i class="bi bi-bar-chart-fill mb-3 text-primary" style="font-size: 3rem;"></i>
+                    <h4 id="predictionTitle" class="text-muted text-center">Prediction Result</h4>
+                    <p id="predictionMessage" class="text-center mt-2">
+                        Fill out the form and click "Predict Now" to see your result.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 <a href="https://github.com/hailDev">HailDev</a> | All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+
+    <script>
+        document.getElementById('predictButton').addEventListener('click', function () {
+            const predictButton = document.getElementById('predictButton');
+            const spinner = document.getElementById('spinner');
+            const predictText = document.getElementById('predictText');
+
+            // Tampilkan spinner dan ubah teks tombol
+            spinner.classList.remove('d-none');
+            predictText.textContent = "Predicting...";
+
+            // Ambil data dari formulir
+            const formData = new FormData(document.getElementById('predictionForm'));
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch("{% url 'predict' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('predictionResult');
+                resultDiv.classList.remove('prediction-default', 'prediction-survived', 'prediction-not-survived');
+
+                if (data.error) {
+                    resultDiv.classList.add('prediction-default');
+                    resultDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                        <h4 class="text-danger">Error</h4>
+                        <p>${data.error}</p>`;
+                } else {
+                    const isSurvived = data.prediction === "Survived";
+                    resultDiv.classList.add(isSurvived ? 'prediction-survived' : 'prediction-not-survived');
+                    resultDiv.innerHTML = `<i class="bi ${isSurvived ? "bi-emoji-smile-fill text-success" : "bi-emoji-frown-fill text-danger"}" style="font-size: 3rem;"></i>
+                        <h4 class="${isSurvived ? "text-success" : "text-danger"}">${isSurvived ? "Survived!" : "Not Survived!"}</h4>
+                        <p>${isSurvived ? "Congratulations! You would have survived." : "Unfortunately, you wouldn't have survived."}</p>
+                        <p>Survived probability: ${data.survived_con}%</p>
+                        ${isSurvived ? `<p class="text-muted">Note: Remember to always stay cautious and enjoy your journey! 😊</p>` : ''}
+                        ${!isSurvived ? `<p class="text-muted">Note: Perhaps you could consider increasing your fare to improve your privileges as a passenger. 💡</p>` : ''}
+                        `;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('predictionResult');
+                resultDiv.classList.add('prediction-default');
+                resultDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                    <h4 class="text-danger">Error</h4>
+                    <p>Something went wrong. Please try again later.</p>`;
+            })
+            .finally(() => {
+                // Sembunyikan spinner dan kembalikan teks tombol
+                spinner.classList.add('d-none');
+                predictText.textContent = "Predict Now";
+            });
+        });
+    </script>
+</body>
+</html>

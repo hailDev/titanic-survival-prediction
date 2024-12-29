@@ -1,0 +1,6 @@
+env
+prediction/model
+prediction/__pycache__
+prediction/migrations
+titanic_project/__pycache__
+db.sqlite3
